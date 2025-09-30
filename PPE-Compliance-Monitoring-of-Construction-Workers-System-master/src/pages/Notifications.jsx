@@ -1,42 +1,62 @@
 import { useState } from "react";
 import { FaExclamationCircle } from "react-icons/fa";
-import { FiMoreVertical } from "react-icons/fi";
+import { FiMoreVertical, FiSearch, FiFilter } from "react-icons/fi";
+import { LuBellRing } from "react-icons/lu";
 
 export default function Incident() {
   const notifications = [
     {
       id: 1,
-      camera: "Camera A",
+      camera: "Camera 1",
       violation: "No Helmet",
-      worker: "Worker 1",
+      worker: "John Doe",
+      workerId: "W456",
       isNew: true,
-      date: "2025-09-27",
+      date: "20 Dec, 2025",
+      time: "11:00:15 AM",
+      imageUrl: "https://images.unsplash.com/photo-1535379453347-1ffd615e2e08?auto=format&fit=crop&w=800&q=80",
+      type: "worker_violation",
     },
     {
       id: 2,
-      camera: "Camera B",
+      camera: "Camera 2",
       violation: "No Vest",
-      worker: "Worker 2",
+      worker: "Jane Smith",
+      workerId: "W423",
       isNew: false,
-      date: "2025-09-26",
+      date: "20 Dec, 2025",
+      time: "10:27:03 AM",
+      imageUrl: "https://images.unsplash.com/photo-1549880175-1e43e2a2c1f3?auto=format&fit=crop&w=800&q=80",
+      type: "worker_violation",
     },
   ];
 
   const [openMenu, setOpenMenu] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const toggleMenu = (id) => {
     setOpenMenu(openMenu === id ? null : id);
   };
 
+  const handleChange = (filterName, value) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [filterName]: value,
+    }));
+  };
+
    /* dropdown lists */
-    const cameraOptions   = ["Camera A", "Camera B", "Camera C"];
-    const violationOptions = ["No Helmet", "No Vest", "No Gloves"];
+    const cameraOptions   = ["Camera 1", "Camera 2"]; // Updated to reflect existing cameras
+    const violationOptions = ["No Helmet", "No Vest", "No Boots", "No Gloves"];
+    
+    const sortOptions = ["Newest", "Oldest"];
   
     /* selected value */
     const [filters, setFilters] = useState({
       camera: "",
       violation: "",
+      sortBy: "Newest",
     });
     
   const menuActions = [
@@ -45,61 +65,125 @@ export default function Incident() {
     { label: "Report Issue", onClick: (id) => alert(`Report issue for ${id}`) },
   ];
 
-  const filteredNotifications =
-    filter === "unread"
-      ? notifications.filter((n) => n.isNew)
-      : notifications;
+  const filteredNotifications = notifications
+    .filter((n) => {
+      // Filter by search query
+      if (searchQuery &&
+          !(n.worker && n.worker.toLowerCase().includes(searchQuery.toLowerCase())) &&
+          !(n.violation && n.violation.toLowerCase().includes(searchQuery.toLowerCase())) &&
+          !(n.camera && n.camera.toLowerCase().includes(searchQuery.toLowerCase()))
+      ) {
+        return false;
+      }
+
+      // Filter by camera
+      if (filters.camera && n.camera !== filters.camera) {
+        return false;
+      }
+
+      // Filter by violation
+      if (filters.violation && n.violation !== filters.violation) {
+        return false;
+      }
+
+      // Filter by unread/all toggle
+      if (filter === 'unread' && !n.isNew) {
+        return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (filters.sortBy === 'Oldest') {
+        return new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time);
+      } else {
+        return new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time);
+      }
+    });
 
   return (
-    <div className="min-h-screen bg-gray-50 text-[#19325C] p-4">
+    <div className="min-h-screen bg-[#1E1F23] text-gray-100 p-8">
+      
+      
+
       {/* ---------- Page Header ---------- */}
-      <header className="mb-6">
-        <p className="text-gray-600 max-w-2xl">
-          Below are real-time notifications of safety violations detected on site.
-        </p>
+      <header className="mb-6 bg-[#2A2B30] px-5 py-3 rounded-xl shadow-lg flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Notifications</h1>
+          <p className="text-gray-400 max-w-2xl">
+            Below are real-time notifications of safety violations detected on site.
+          </p>
+        </div>
+        <LuBellRing className="text-[#5388DF]" size={32} />
       </header>
 
       {/* ---------- Filters ---------- */}
       <section className="mb-10">
-       
-
-        <div className="flex flex-wrap gap-6">
-          {/* Camera Dropdown */}
-          <div className="flex flex-col w-60">
-            <label className="font-medium text-sm mb-1">Camera</label>
-            <select
-              value={filters.camera}
-              onChange={(e) => handleChange("camera", e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#19325C]"
-            >
-              <option value="">Select a camera</option>
-              {cameraOptions.map((cam) => (
-                <option key={cam} value={cam}>{cam}</option>
-              ))}
-            </select>
-            <span className="text-xs text-gray-500 mt-1">
-              Pick a camera to filter results.
-            </span>
+        <div className="flex flex-col md:flex-row items-stretch md:items-end gap-6">
+          {/* Search Bar */}
+          <div className="relative w-full md:w-auto flex-1">
+            <label htmlFor="search-notifications" className="font-medium text-sm mb-1 text-gray-400 sr-only">Search Notifications</label>
+            <input
+              type="text"
+              id="search-notifications"
+              placeholder="Search Notifications..."
+              className="w-full bg-[#2A2B30] text-gray-200 pl-12 pr-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:border-[#5388DF]"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchQuery}
+            />
+            <FiSearch 
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" 
+              size={20} 
+            />
           </div>
 
-          {/* Violation Dropdown */}
-          <div className="flex flex-col w-60">
-            <label className="font-medium text-sm mb-1">Violation Type</label>
-            <select
-              value={filters.violation}
-              onChange={(e) => handleChange("violation", e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#19325C]"
-            >
-              <option value="">Select a violation</option>
-              {violationOptions.map((vio) => (
-                <option key={vio} value={vio}>{vio}</option>
-              ))}
-            </select>
-            <span className="text-xs text-gray-500 mt-1">
-              Pick a violation type to filter results.
-            </span>
-          </div>
+          {/* Filter Dropdowns */}
+          <div className="flex flex-wrap gap-4">
+            {/* Camera Dropdown */}
+            <div className="flex flex-col w-48">
+              <label className="font-medium text-sm mb-1 text-gray-400">Camera</label>
+              <select
+                value={filters.camera}
+                onChange={(e) => handleChange("camera", e.target.value)}
+                className="px-3 py-2 border border-gray-700 rounded-lg bg-[#2A2B30] shadow-sm text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#5388DF]"
+              >
+                <option value="">All Cameras</option>
+                {cameraOptions.map((cam) => (
+                  <option key={cam} value={cam}>{cam}</option>
+                ))}
+              </select>
+            </div>
 
+            {/* Violation Type Dropdown */}
+            <div className="flex flex-col w-48">
+              <label className="font-medium text-sm mb-1 text-gray-400">Violation Type</label>
+              <select
+                value={filters.violation}
+                onChange={(e) => handleChange("violation", e.target.value)}
+                className="px-3 py-2 border border-gray-700 rounded-lg bg-[#2A2B30] shadow-sm text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#5388DF]"
+              >
+                <option value="">All Violations</option>
+                {violationOptions.map((vio) => (
+                  <option key={vio} value={vio}>{vio}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Sort By Dropdown */}
+            <div className="flex flex-col w-48">
+              <label className="font-medium text-sm mb-1 text-gray-400">Sort By</label>
+              <select
+                value={filters.sortBy}
+                onChange={(e) => handleChange("sortBy", e.target.value)}
+                className="px-3 py-2 border border-gray-700 rounded-lg bg-[#2A2B30] shadow-sm text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#5388DF]"
+              >
+                {sortOptions.map((sort) => (
+                  <option key={sort} value={sort}>{sort}</option>
+                ))}
+              </select>
+            </div>
+
+          </div>
 
         </div>
       </section>
@@ -107,7 +191,7 @@ export default function Incident() {
       {/* ---------- Notification list ---------- */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Notifications</h2>
+          <h2 className="text-3xl font-bold text-white">Notifications</h2>
 
           {/* All/unread toggle */}
           <div className="flex space-x-2">
@@ -134,7 +218,7 @@ export default function Incident() {
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-4">
           {filteredNotifications.length === 0 ? (
             <div className="text-center text-gray-500 py-10">
               No notifications to display.
@@ -143,55 +227,105 @@ export default function Incident() {
             filteredNotifications.map((n) => (
               <div
                 key={n.id}
-                className="relative flex justify-between items-start p-4 bg-white rounded-xl border border-gray-200 hover:bg-gray-50 transition"
+                className="relative flex bg-[#2A2B30] shadow-lg rounded-xl"
               >
-                {/* Left: unread dot + text */}
-                <div className="flex gap-3">
-                  {/* Blue dot for unread */}
-                  {n.isNew && (
-                    <span className="w-3 h-3 mt-2 rounded-full bg-blue shrink-0"></span>
-                  )}
+                {/* Colored Left Bar */}
+                <div
+                  className={`w-2 rounded-l-xl ${n.isNew ? 'bg-red-500' : 'bg-gray-500'}`}
+                ></div>
 
-                  <div className="flex flex-col">
-                    <p className="text-sm text-gray-800 leading-snug">
-                      <span className="font-semibold">{n.worker}</span> was
-                      detected by <span className="font-medium">{n.camera}</span>{" "}
-                      for a <span className="font-semibold">{n.violation}</span>{" "}
-                      violation.
-                    </p>
+                <div className="flex flex-1 justify-between items-center p-4 rounded-r-xl">
+                  {/* Left Section: Image and Text */}
+                  <div className="flex items-center gap-4">
+                    {/* Worker/Camera Image */}
+                    
 
-                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                      <FaExclamationCircle className="text-red-500" size={12} />
-                      <span>{n.date}</span>
+                    <div className="flex flex-col">
+                      {/* Title */}
+                      {n.type === 'worker_violation' ? (
+                        <p className="text-white font-semibold text-lg">
+                          Worker {n.id} - {n.worker}
+                        </p>
+                      ) : (
+                        <p className="text-white font-semibold text-lg">
+                          {n.camera}
+                        </p>
+                      )}
+                      {n.type === 'worker_violation' && (
+                        <p className="text-gray-400 text-sm mt-1">
+                          {n.camera}
+                        </p>
+                      )}
+
+                      {/* Violation/Alert Description */}
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-gray-300 text-sm">
+                          {n.violation}
+                        </p>
+                        {n.type === 'worker_violation' && (
+                          <FaExclamationCircle className="text-red-500" size={14} />
+                        )}
+                        {n.type === 'camera_alert' && n.resolved && (
+                          <span className="text-green-500"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block ml-1" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 13.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg></span>
+                        )}
+                      </div>
+
+                      {/* Date and Time */}
+                      <p className="text-gray-500 text-xs mt-1">
+                        {n.date} - {n.time}
+                      </p>
+
+                      {/* Resolved by System */}
+                      {n.type === 'camera_alert' && n.resolved && (
+                        <p className="text-green-500 text-xs mt-1 flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 13.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg> Resolved by System (Auto-clear)
+                        </p>
+                      )}
                     </div>
                   </div>
-                </div>
 
-                <div className="relative">
-                  <button
-                    onClick={() => toggleMenu(n.id)}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                    aria-label="Actions menu"
-                  >
-                    <FiMoreVertical size={20} />
-                  </button>
-
-                  {openMenu === n.id && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-20">
-                      {menuActions.map((action) => (
-                        <button
-                          key={action.label}
-                          onClick={() => {
-                            action.onClick(n.id);
-                            setOpenMenu(null);
-                          }}
-                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                        >
-                          {action.label}
+                  {/* Right Section: Action Buttons and Menu */}
+                  <div className="flex items-center gap-2">
+                    {n.type === 'worker_violation' && (
+                      <>
+                        <button className="px-4 py-2 bg-[#5388DF] text-white rounded-lg text-sm hover:bg-[#19325C] transition">
+                          View Footage
                         </button>
-                      ))}
+                      </>
+                    )}
+                    {n.type === 'camera_alert' && (
+                      <button className="px-4 py-2 bg-[#5388DF] text-white rounded-lg text-sm hover:bg-[#19325C] transition">
+                        View Report
+                      </button>
+                    )}
+                    
+                    <div className="relative">
+                      <button
+                        onClick={() => toggleMenu(n.id)}
+                        className="p-2 rounded-full hover:bg-gray-700 transition-colors text-gray-400 hover:text-white"
+                        aria-label="Actions menu"
+                      >
+                        <FiMoreVertical size={20} />
+                      </button>
+
+                      {openMenu === n.id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-[#2A2B30] border border-gray-700 rounded-xl shadow-lg z-20">
+                          {menuActions.map((action) => (
+                            <button
+                              key={action.label}
+                              onClick={() => {
+                                action.onClick(n.id);
+                                setOpenMenu(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
+                            >
+                              {action.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             ))

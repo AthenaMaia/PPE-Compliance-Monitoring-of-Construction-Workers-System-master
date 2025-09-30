@@ -1,9 +1,28 @@
-import { FiUpload, FiCamera } from "react-icons/fi";
+import { FiUpload, FiCamera, FiSearch, FiMaximize2, FiSettings, FiVideo, FiWifi, FiAlertTriangle  } from "react-icons/fi";
 import ImageCard from "../components/ImageCard";
 import { useState, useEffect } from "react";
 
+
 export default function Camera() {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [cameras, setCameras] = useState([
+    {
+      image: "https://images.unsplash.com/photo-1535379453347-1ffd615e2e08?auto=format&fit=crop&w=800&q=80",
+      title: "Camera 1",
+      status: "LIVE",
+    },
+    {
+      image: "https://images.unsplash.com/photo-1535379453347-1ffd615e2e08?auto=format&fit=crop&w=800&q=80",
+      title: "Camera 2",
+      status: "OFFLINE",
+    },
+    {
+      image: "https://images.unsplash.com/photo-1535379453347-1ffd615e2e08?auto=format&fit=crop&w=800&q=80",
+      title: "Camera 3",
+      status: "NO SIGNAL",
+    },
+  ]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -16,63 +35,131 @@ export default function Camera() {
     minute: "2-digit",
   });
 
+  const stats = [
+    { 
+      title: "TOTAL CAMERAS", 
+      value: "24", 
+      trend: "up",
+      icon: <FiVideo className="text-[#5388DF]" size={32} />
+    },
+    { 
+      title: "ACTIVE FEEDS", 
+      value: "23", 
+      // subtext: "(96%)", 
+      trend: "up",
+      icon: <FiWifi className="text-green-400" size={32} />
+    },
+    { 
+      title: "NON-COMPLIANCE ALERTS", 
+      value: "1", 
+      trend: "warning",
+      icon: <FiAlertTriangle className="text-amber-400" size={32} />
+    },
+];
+  
+   const handleCameraClick = () => {
+    console.log('Camera clicked');
+  };
+
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const newCamera = {
+        image: URL.createObjectURL(file), // Create a temporary URL for display
+        title: `Camera ${cameras.length + 1}`,
+        status: "LIVE", // Default status for new uploads
+      };
+      setCameras((prevCameras) => [...prevCameras, newCamera]);
+    }
+  };
+
+  const handleRemoveCamera = (cameraTitle) => {
+    setCameras((prevCameras) =>
+      prevCameras.filter((camera) => camera.title !== cameraTitle)
+    );
+  };
+
   return (
-    <div className="p-8 text-[#19325C] bg-gray-50 min-h-screen">
-      {/* ---------- Page Title ---------- */}
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold mb-1">Camera Monitoring</h1>
-        <p className="text-gray-600 max-w-2xl">
-          View live camera feeds, upload recorded videos, and manage camera
-          sources for real-time safety monitoring.
-        </p>
-      </header>
-
-      {/* ---------- Filters & Actions ---------- */}
-      <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          {/* Filter dropdown */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Select Camera Group
-            </label>
-            <select className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-[#19325C] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#19325C]">
-              <option value="">Choose a group</option>
-              <option>Entrance Area</option>
-              <option>Main Site</option>
-              <option>Warehouse</option>
-            </select>
-            <p className="text-xs text-gray-500 mt-1">
-              Filter cameras by location or category.
-            </p>
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex gap-4 md:justify-end">
-            <button className="flex items-center gap-2 px-4 py-2 bg-[#5388DF] text-white rounded-lg hover:bg-[#19325C] transition">
-              <FiUpload size={18} />
-              Upload Videos
-            </button>
-
-            <button className="flex items-center gap-2 px-4 py-2 bg-[#19325C] text-white rounded-lg hover:bg-[#5388DF] transition">
-              <FiCamera size={18} />
-              Add Camera
-            </button>
+     <div className="p-8 text-gray-100 bg-[#1E1F23] min-h-screen">
+      {/* System Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      {stats.map((stat, index) => (
+        <div key={index} className="bg-[#2A2B30] px-5 py-3 rounded-xl shadow-lg">
+          <h3 className="text-gray-400 text-sm mb-4">{stat.title}</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-3xl font-bold text-white">{stat.value}</span>
+              {stat.subtext && (
+                <span className="text-gray-400 text-sm">{stat.subtext}</span>
+              )}
+            </div>
+            {stat.icon}
           </div>
         </div>
-      </section>
+      ))}
+    </div>
+       {/* Search and Filter Section */}
+    <div className="flex flex-col md:flex-row gap-4 mb-8">
+      {/* Search Bar */}
+      <div className="relative flex-1">
+        <input
+          type="text"
+          placeholder="Search Cameras"
+          className="w-full bg-[#2A2B30] text-gray-200 pl-12 pr-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:border-[#5388DF]"
+          onChange={(e) => setSearchQuery(e.target.value)}
+          value={searchQuery}
+        />
+        <FiSearch 
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" 
+          size={20} 
+        />
+      </div>
+
+      {/* Filter dropdown */}
+      <div className="w-full md:w-64">
+        <select className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-[#2A2B30] text-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5388DF]">
+          <option value="">All Camera Groups</option>
+          <option>Entrance Area</option>
+          <option>Main Site</option>
+          <option>Warehouse</option>
+        </select>
+      </div>
+
+       <div className="flex gap-2">
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          id="image-upload"
+          onChange={handleImageUpload}
+        />
+        <button
+          className="px-4 py-3 bg-[#5388DF] text-white rounded-lg hover:bg-[#19325C] transition flex items-center gap-2"
+          onClick={() => document.getElementById('image-upload').click()}
+        >
+          <FiUpload size={18} />
+          <span className="hidden md:inline">Upload</span>
+        </button>
+        <button className="px-4 py-3 bg-[#19325C] text-white rounded-lg hover:bg-[#5388DF] transition flex items-center gap-2">
+          <FiCamera size={18} />
+          <span className="hidden md:inline">Add Camera</span>
+        </button>
+      </div>
+    </div>
+          
 
       {/* ---------- Status & Time Info ---------- */}
       <section className="flex flex-wrap items-center gap-4 mb-8">
-        <div className="bg-[#19325C]/10 text-[#19325C] px-4 py-2 rounded-full text-sm font-medium">
-          {formattedDate} • {formattedTime}
+        <div className="bg-[#2A2B30] text-gray-200 px-4 py-2 rounded-lg text-md font-medium"> {/* Updated colors */}
+          {formattedDate} | {formattedTime}
         </div>
 
-        <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
+        <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-medium">
           <span className="w-3 h-3 rounded-full bg-green-500"></span>
           Compliance
         </div>
 
-        <div className="flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium">
+        <div className="flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm font-medium">
           <span className="w-3 h-3 rounded-full bg-red-500"></span>
           Non-Compliance
         </div>
@@ -80,17 +167,27 @@ export default function Camera() {
 
       {/* ---------- Camera List ---------- */}
       <section>
-        <h2 className="text-xl font-semibold mb-4">Available Cameras</h2>
-        <p className="text-gray-600 text-sm mb-6">
+        <h2 className="text-xl font-semibold mb-4 text-white">Available Cameras</h2>
+        <p className="text-gray-300 text-sm mb-6"> {/* Changed from text-gray-600 */}
           Click a camera to view live footage or recent recordings.
         </p>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <ImageCard
-            image="https://images.unsplash.com/photo-1535379453347-1ffd615e2e08?auto=format&fit=crop&w=800&q=80"
-            title="Camera 1"
-            time="12:45 PM"
-          />
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {cameras.map((camera, index) => (
+            <ImageCard
+              key={index}
+              image={camera.image}
+              title={camera.title}
+              time={formattedTime} // Time remains current time for all cameras
+              status={camera.status}
+              onClick={() => handleCameraClick(camera.title)} // Pass camera title to handler
+              onRemove={() => handleRemoveCamera(camera.title)} // Pass remove handler
+              actionIcons={[
+                { icon: <FiMaximize2 size={16} />, onClick: () => console.log(`Maximize ${camera.title}`) },
+                { icon: <FiSettings size={16} />, onClick: () => console.log(`Settings ${camera.title}`) },
+              ]}
+            />
+          ))}
         </div>
       </section>
     </div>

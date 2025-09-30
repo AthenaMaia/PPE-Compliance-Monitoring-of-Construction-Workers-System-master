@@ -20,10 +20,10 @@ function App() {
         element={
           <div className="flex">
             <Sidebar />
-            <div className="flex-1 bg-[#FFFFFF] min-h-screen">
+            <div className="flex-1 bg-[#1E1F23] min-h-screen">
               <Header />
 
-              <div className="p-6">
+              <div className="p-6 bg-[#1E1F23] rounded-lg m-4 text-gray-100">
                 <Routes>
                   <Route path="camera" element={<Camera />} />
                   <Route path="notifications" element={<Notifications />} />
