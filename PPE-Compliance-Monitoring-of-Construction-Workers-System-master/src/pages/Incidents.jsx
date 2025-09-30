@@ -1,28 +1,33 @@
 import React, { useState } from "react";
-import { FaEye, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
-import { FiSearch } from "react-icons/fi";
+import { FaEye } from "react-icons/fa";
+import { FiSearch, FiCalendar } from "react-icons/fi";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { format } from "date-fns";
+
 
 export default function Incident() {
   const notifications = [
-    { id: 1, camera: "Camera 2", violation: "No Helmet",  date: "2025-09-27 10:35 AM", worker: "John Doe", workerNo: "1" },
-    { id: 2, camera: "Camera 3", violation: "No Vest",    date: "2025-09-26 4:20 PM",  worker: "Jane Smith", workerNo: "2" },
-    { id: 3, camera: "Camera 3", violation: "No Gloves",  date: "2025-09-27 09:00 AM", worker: "Peter Jones", workerNo: "3" },
-    { id: 4, camera: "Camera 3", violation: "No Helmet",  date: "2025-09-25 11:15 AM", worker: "Alice Brown", workerNo: "4" },
-    { id: 5, camera: "Camera 5", violation: "No Safety Shoes", date: "2025-09-24 02:30 PM", worker: "Robert Green", workerNo: "5" },
-    { id: 6, camera: "Camera 7", violation: "No Vest",    date: "2025-09-23 01:00 PM", worker: "Sarah White", workerNo: "6" },
-    { id: 7, camera: "Camera 10", violation: "No Gloves",  date: "2025-09-22 08:45 AM", worker: "David Black", workerNo: "7" },
+    { id: 1, camera: "Camera 2", violation: "No Helmet",  date: "2025-09-27 10:35:00", worker: "John Doe", workerNo: "1" },
+    { id: 2, camera: "Camera 3", violation: "No Vest",    date: "2025-09-26 16:20:00",  worker: "Jane Smith", workerNo: "2" },
+    { id: 3, camera: "Camera 3", violation: "No Gloves",  date: "2025-09-27 09:00:00", worker: "Peter Jones", workerNo: "3" },
+    { id: 4, camera: "Camera 3", violation: "No Helmet",  date: "2025-09-25 11:15:00", worker: "Alice Brown", workerNo: "4" },
+    { id: 5, camera: "Camera 5", violation: "No Safety Shoes", date: "2025-09-24 14:30:00", worker: "Robert Green", workerNo: "5" },
+    { id: 6, camera: "Camera 7", violation: "No Vest",    date: "2025-09-23 13:00:00", worker: "Sarah White", workerNo: "6" },
+    { id: 7, camera: "Camera 10", violation: "No Gloves",  date: "2025-09-22 08:45:00", worker: "David Black", workerNo: "7" },
   ];
 
   const cameraOptions   = ["Camera 1", "Camera 2", "Camera 3"];
   const violationOptions = ["No Helmet", "No Vest", "No Gloves", "No Safety Shoes"];
   
 
-  const [filters, setFilters] = useState({ camera: "", violation: "" });
+  const [filters, setFilters] = useState({ camera: "", violation: "", date: null, sortBy: "newest" });
   const handleChange = (key, value) => setFilters((p) => ({ ...p, [key]: value }));
+  const handleDateChange = (date) => handleChange("date", date);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5); // You can adjust this value
+  const [itemsPerPage] = useState(5); 
 
   const filteredNotifications = notifications
     .filter((n) => {
@@ -37,7 +42,21 @@ export default function Incident() {
 
       if (filters.camera && n.camera !== filters.camera) return false;
       if (filters.violation && n.violation !== filters.violation) return false;
+      if (filters.date) {
+        const notificationDate = new Date(n.date.split(' ')[0]); // Get only the date part for comparison
+        const filterDate = new Date(filters.date);
+        if (notificationDate.toDateString() !== filterDate.toDateString()) return false;
+      }
       return true;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      if (filters.sortBy === "newest") {
+        return dateB.getTime() - dateA.getTime(); // Newest first
+      } else {
+        return dateA.getTime() - dateB.getTime(); // Oldest first
+      }
     });
 
   const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
@@ -48,13 +67,21 @@ export default function Incident() {
   return (
     <div className="min-h-screen bg-[#1E1F23] text-gray-100 p-6">
       {/* ---------- Page Header ---------- */}
-     
+      <div className="bg-[#2A2B30] px-5 py-3 rounded-xl shadow-lg mb-8 flex items-center justify-between">
+        {/* <h1 className="text-2xl font-bold text-gray-100">Incident Records</h1> */}
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 text-gray-300">
+            <span className="text-lg font-semibold">Total Incidents:</span>
+            <span className="text-xl font-bold text-[#5388DF]">{notifications.length}</span>
+          </div>
+        </div>
+      </div>
+
+    
 
       {/* ---------- Filters ---------- */}
       <section className="mb-10">
-        
-
-        <div className="flex flex-col md:flex-row items-stretch md:items-end gap-6">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-6">
           {/* Search Bar */}
           <div className="relative w-full md:w-auto flex-1">
             <label htmlFor="search-incidents" className="sr-only">Search Incidents</label>
@@ -73,12 +100,12 @@ export default function Incident() {
           </div>
 
           {/* Camera */}
-          <div className="flex flex-col w-60">
+          <div className="flex flex-col w-40">
             <label className="font-medium text-sm mb-1 text-gray-400">Camera Location</label>
             <select
               value={filters.camera}
               onChange={(e) => handleChange("camera", e.target.value)}
-              className="px-3 py-2 border border-gray-700 rounded-lg bg-[#2A2B30] shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#5388DF] text-gray-200"
+              className="px-3 py-3 border border-gray-700 rounded-lg bg-[#2A2B30] shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#5388DF] text-gray-200"
             >
               <option value="">All Camera</option>
               {cameraOptions.map((cam) => (
@@ -88,12 +115,12 @@ export default function Incident() {
           </div>
 
           {/* Violation */}
-          <div className="flex flex-col w-60">
+          <div className="flex flex-col w-40">
             <label className="font-medium text-sm mb-1 text-gray-400">Violation Type</label>
             <select
               value={filters.violation}
               onChange={(e) => handleChange("violation", e.target.value)}
-              className="px-3 py-2 border border-gray-700 rounded-lg bg-[#2A2B30] shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#5388DF] text-gray-200"
+              className="px-3 py-3 border border-gray-700 rounded-lg bg-[#2A2B30] shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#5388DF] text-gray-200"
             >
               <option value="">All Violations</option>
               {violationOptions.map((vio) => (
@@ -102,6 +129,33 @@ export default function Incident() {
             </select>
           </div>
           
+          {/* Sort By */}
+          <div className="flex flex-col w-40">
+            <label className="font-medium text-sm mb-1 text-gray-400">Sort By</label>
+            <select
+              value={filters.sortBy}
+              onChange={(e) => handleChange("sortBy", e.target.value)}
+              className="px-3 py-3 border border-gray-700 rounded-lg bg-[#2A2B30] shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#5388DF] text-gray-200"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+
+          {/* Date Picker */}
+          <div className="flex flex-col w-40">
+            <label className="font-medium text-sm mb-1 text-gray-400">Date</label>
+            <div className="relative">
+              <DatePicker
+                selected={filters.date}
+                onChange={handleDateChange}
+                dateFormat="yyyy/MM/dd"
+                className="px-3 py-3 border border-gray-700 rounded-lg bg-[#2A2B30] shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#5388DF] text-gray-200 w-full pr-16"
+                placeholderText="Select Date"
+              />
+              <FiCalendar className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -130,7 +184,7 @@ export default function Incident() {
               <div className="text-gray-200">{n.worker}</div>
               <div className="text-gray-300">{n.camera}</div>
               <div className="text-gray-300">{n.violation}</div>
-              <div className="text-gray-300">{n.date}</div>
+              <div className="text-gray-300">{format(new Date(n.date), 'yyyy-MM-dd HH:mm:ss')}</div>
               <div className="text-center">
                 <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#5388DF] rounded-md hover:bg-[#19325C] transition-colors">
                   <FaEye className="mr-2" />

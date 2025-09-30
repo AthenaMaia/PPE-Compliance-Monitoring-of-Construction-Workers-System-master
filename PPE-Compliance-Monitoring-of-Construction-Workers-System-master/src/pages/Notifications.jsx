@@ -7,7 +7,7 @@ export default function Incident() {
   const notifications = [
     {
       id: 1,
-      camera: "Camera 1",
+      camera: "Camera 1 - Entrance",
       violation: "No Helmet",
       worker: "John Doe",
       workerId: "W456",
@@ -19,7 +19,7 @@ export default function Incident() {
     },
     {
       id: 2,
-      camera: "Camera 2",
+      camera: "Camera 2 - Ground Floor",
       violation: "No Vest",
       worker: "Jane Smith",
       workerId: "W423",

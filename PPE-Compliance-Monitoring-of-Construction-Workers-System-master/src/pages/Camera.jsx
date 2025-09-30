@@ -2,6 +2,7 @@ import { FiUpload, FiCamera, FiSearch, FiMaximize2, FiSettings, FiVideo, FiWifi,
 import ImageCard from "../components/ImageCard";
 import { useState, useEffect } from "react";
 
+
 export default function Camera() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState("");
